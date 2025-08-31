@@ -1,5 +1,4 @@
-from typing import List, Dict, Optional
-import uuid
+from typing import List, Dict, Optional, Any
 
 from sqlalchemy.orm import Session
 from sqlalchemy import exc
@@ -15,56 +14,53 @@ class MetaData:
     """
     def __init__(self):
         """
-        Initializes the MetaData with a database session.
-        
-        Args:
-            db_session (Session): An active SQLAlchemy database session.
+        Initializes the MetaData class.
+
+        This constructor sets up the necessary database tables by calling
+        `create_all` and establishes a new database session for subsequent
+        operations.
         """
         sql_models.Base.metadata.create_all(bind=engine)
 
         self.db : Session = SessionLocal()
-        self.namespace_uuid = uuid.UUID('264e64d4-ab61-534e-8fff-dcd5a2531ff8')
 
-    def add_data(self, document_name: str, text_chunks: List[str]) -> Optional[List[Dict]]:
+    def add_data(self, document_name: str, text_chunks: List[Dict[str, Any]]) -> Optional[List[Dict]]:
         """
         Adds document chunks to the database.
 
-        Generates unique IDs for each chunk based on the document name and
-        the first 20 characters of the chunk text.
+        This method iterates through a list of text chunks, creating a database
+        record for each one. Each record is linked to its source document and
+        includes its unique chunk ID and text content. The method handles
+        database commits and rollbacks to ensure data integrity.
 
         Args:
             document_name (str): The name of the source document.
-            text_chunks (List[str]): A list of text chunks to be added.
+            text_chunks (List[Dict[str, Any]]): A list of dictionaries, where each
+                                               dictionary contains 'content' and 'uuid'
+                                               for a specific text chunk.
 
         Returns:
-            Optional[List[Dict]]: A list of dictionaries containing the chunk
-            text and its UUID, or None if an error occurs.
+            Optional[Dict]: A dictionary with a success message if the data
+            is added successfully. Returns None if an SQLAlchemyError occurs
+            during the process.
         """
         source_id = document_name
-        added_chunks_info = []
 
         try:
-            for chunk_text in text_chunks:
-                chunk_string = source_id + chunk_text[:20]
-                chunk_id = str(uuid.uuid5(self.namespace_uuid, chunk_string))
+            for item in text_chunks:
+                chunk_str = item['content']
+                chunk_id = item['uuid']
                 
                 db_chunk = sql_models.DataChunks(
                     sourceId=source_id,
                     chunkID=chunk_id,
-                    textChunk=chunk_text
+                    textChunk=chunk_str
                 )
                 self.db.add(db_chunk)
-                
-                added_chunks_info.append({
-                    "chunk": chunk_text,
-                    "uuid": chunk_id
-                })
 
             self.db.commit()
-            print(f"Successfully added {len(text_chunks)} chunks for document '{document_name}'.")
-            return added_chunks_info
-            
+            return f"Successfully added {len(text_chunks)} chunks for document '{document_name}'."
+
         except exc.SQLAlchemyError as e:
             self.db.rollback()
-            print(f"Error adding data: {e}")
-            return None
+            return f"Error adding data: {e}"
