@@ -1,19 +1,18 @@
+from typing import Dict, Any
+
 from fastapi import FastAPI
 import uvicorn
 
 from routes import ingest_document, chat
 
-app = FastAPI()
+app: FastAPI = FastAPI()
 app.include_router(ingest_document.router)
 app.include_router(chat.router)
 
 
 @app.get("/", tags=["health-check"], summary="Health check endpoint")
-async def read_root():
-    """
-    A simple health check endpoint to ensure the API is running.
-    Returns a success message.
-    """
+async def read_root() -> Dict[str, str]:
+    """Health check endpoint to ensure the API is running."""
     return {"message": "API is operational"}
 
 if __name__ == "__main__":

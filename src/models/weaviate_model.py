@@ -1,31 +1,31 @@
+from typing import Optional
+
 import weaviate
 from weaviate.collections.classes.config import Property, DataType, Configure
+from weaviate.client import WeaviateClient
+
 
 class WeaviateManager:
-    """
-    Manages Weaviate collection creation and connection.
-    """
-    def __init__(self, host: str = "localhost", port: int = 8080):
-        """
-        Initializes the Weaviate client.
+    """Manages Weaviate collection creation and connection."""
+    
+    def __init__(self, host: str = "localhost", port: int = 8080) -> None:
+        """Initialize the Weaviate client.
 
         Args:
-            host (str): The host address of the Weaviate instance.
-            port (int): The port of the Weaviate instance.
+            host: The host address of the Weaviate instance.
+            port: The port of the Weaviate instance.
         """
-        self.client = weaviate.connect_to_local(host=host, port=port)
-        print("Successfully connected to Weaviate client.")
+        self.client: WeaviateClient = weaviate.connect_to_local(host=host, port=port)
+        self.collection: Optional[object] = None
 
-    def create_collection(self, collection_name: str):
-        """
-        Creates a new collection in Weaviate if it doesn't already exist.
+    def create_collection(self, collection_name: str) -> None:
+        """Create a new collection in Weaviate if it doesn't already exist.
 
         Args:
-            collection_name (str): The name of the collection to create.
-            properties (list[Property]): A list of Property objects defining the collection's schema.
+            collection_name: The name of the collection to create.
         """
         if self.client.collections.exists(collection_name):
-            print(f"Collection '{collection_name}' already exists.")
+            pass
         else:
             try:
                 self.collection = self.client.collections.create(
@@ -41,15 +41,11 @@ class WeaviateManager:
                             image_fields=None
                         )
                     )
-                print(f"Collection '{collection_name}' created successfully.")
+                
             except Exception as e:
-                print(f"Failed to create collection '{collection_name}': {e}")
+                return f"Failed to create collection '{collection_name}': {e}"
     
-    def close_connection(self):
-        """
-        Closes the Weaviate client connection.
-        """
+    def close_connection(self) -> None:
+        """Close the Weaviate client connection."""
         if self.client:
             self.client.close()
-            print("Weaviate client connection closed.")
-            

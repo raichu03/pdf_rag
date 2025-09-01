@@ -1,29 +1,38 @@
 import re
-from typing import List, Literal, Tuple
+from typing import List, Literal
 
 class TextProcessor:
-    """
-    A class to chunk text using different strategies, accepting the text 
-    during the function call.
-    """
+    """A class to chunk text using different strategies."""
 
     def _chunk_by_characters(self, text: str, chunk_size: int, overlap: int) -> List[str]:
+        """Chunk the text based on a fixed number of characters.
+        
+        Args:
+            text: The text to chunk.
+            chunk_size: Maximum size of each chunk.
+            overlap: Number of characters to overlap between chunks.
+            
+        Returns:
+            List of text chunks.
         """
-        Chunks the text based on a fixed number of characters.
-        """
-        chunks = []
-        start = 0
+        chunks: List[str] = []
+        start: int = 0
         while start < len(text):
-            end = start + chunk_size
+            end: int = start + chunk_size
             chunks.append(text[start:end])
             start += chunk_size - overlap
         return chunks
 
     def _chunk_by_sentences(self, text: str) -> List[str]:
+        """Chunk the text into individual sentences.
+        
+        Args:
+            text: The text to chunk.
+            
+        Returns:
+            List of sentences.
         """
-        Chunks the text into individual sentences.
-        """
-        sentences = re.split(r'(?<=[.!?])\s+', text)
+        sentences: List[str] = re.split(r'(?<=[.!?])\s+', text)
         return [s.strip() for s in sentences if s.strip()]
 
     def chunk_text(self, 
@@ -31,19 +40,16 @@ class TextProcessor:
                    strategy: Literal["char", "sentence"], 
                    chunk_size: int = 500, 
                    overlap: int = 50) -> List[str]:
-        """
-        Chunks the given text based on the specified strategy.
+        """Chunk the given text based on the specified strategy.
         
         Args:
-            text (str): The raw text to be processed.
-            strategy (Literal["char", "sentence"]): The chunking strategy to use.
-                                                     "char" for character-based.
-                                                     "sentence" for sentence-based.
-            chunk_size (int): The maximum size of a chunk for character-based strategy.
-            overlap (int): The number of characters to overlap between chunks (for character-based).
+            text: The raw text to be processed.
+            strategy: The chunking strategy to use ("char" or "sentence").
+            chunk_size: The maximum size of a chunk for character-based strategy.
+            overlap: The number of characters to overlap between chunks.
         
         Returns:
-            List[str]: The list of chunks.
+            The list of chunks.
         
         Raises:
             ValueError: If an unknown chunking strategy is provided.

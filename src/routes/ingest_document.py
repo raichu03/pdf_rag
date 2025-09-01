@@ -1,17 +1,18 @@
+from typing import Literal, Optional, Dict, Any
+import os
+import io
+
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, Query
-from typing import Literal
 from pypdf import PdfReader
 from docx import Document
-import io
-import os
 
 from utils import TextProcessor
 from services import AddRecords
 
-router = APIRouter()
+router: APIRouter = APIRouter()
 
-data_ingestor = AddRecords()
-text_processor = TextProcessor()
+data_ingestor: AddRecords = AddRecords()
+text_processor: TextProcessor = TextProcessor()
 
 ChunkingStrategy = Literal["char", "sentence"]
 
@@ -30,13 +31,17 @@ async def upload_and_process_document(
     chunking_strategy: ChunkingStrategy = Query(
         "char",
         description="""The strategy to use for text chunking.
-        Accepted values are 'char' or 'recursive'.""",
+        Accepted values are 'char' or 'sentence'.""",
     ),
-):
-    """
-    Handles the document upload, text extraction, and ingestion process.
-    """
-    file_extension = os.path.splitext(file.filename)[1].lower()
+) -> Optional[str]:
+    """Handle document upload, text extraction, and ingestion process."""
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No filename provided."
+        )
+    
+    file_extension: str = os.path.splitext(file.filename)[1].lower()
 
     if file_extension not in [".txt", ".pdf", ".docx"]:
         raise HTTPException(
@@ -45,8 +50,9 @@ async def upload_and_process_document(
         )
 
     try:
-        content = await file.read()
+        content: bytes = await file.read()
         
+        text: str
         if file_extension == ".txt":
             text = _extract_text_from_txt(content)
         elif file_extension == ".pdf":
@@ -54,12 +60,12 @@ async def upload_and_process_document(
         elif file_extension == ".docx":
             text = _extract_text_from_docx(content)
 
-        chunks = text_processor.chunk_text(
+        chunks: list[str] = text_processor.chunk_text(
             text=text,
             strategy=chunking_strategy,
             chunk_size=100
         )
-        ingestion_response = data_ingestor.ingest_data(
+        ingestion_response: Optional[str] = data_ingestor.ingest_data(
             document_name=file.filename, text_chunks=chunks
         )
         return ingestion_response
@@ -72,7 +78,17 @@ async def upload_and_process_document(
 
 
 def _extract_text_from_txt(content: bytes) -> str:
-    """Helper function to extract text from a .txt file."""
+    """Extract text from a .txt file.
+    
+    Args:
+        content: The file content as bytes.
+        
+    Returns:
+        The decoded text content.
+        
+    Raises:
+        HTTPException: If the file cannot be decoded.
+    """
     try:
         return content.decode("utf-8")
     except UnicodeDecodeError:
@@ -81,20 +97,32 @@ def _extract_text_from_txt(content: bytes) -> str:
             detail="Could not decode .txt file. Ensure it is UTF-8 encoded."
         )
 
-
 def _extract_text_from_pdf(content: bytes) -> str:
-    """Helper function to extract text from a .pdf file."""
-    pdf_reader = PdfReader(io.BytesIO(content))
-    text = ""
+    """Extract text from a .pdf file.
+    
+    Args:
+        content: The file content as bytes.
+        
+    Returns:
+        The extracted text content.
+    """
+    pdf_reader: PdfReader = PdfReader(io.BytesIO(content))
+    text: str = ""
     for page in pdf_reader.pages:
         text += page.extract_text() or ""
     return text
 
-
 def _extract_text_from_docx(content: bytes) -> str:
-    """Helper function to extract text from a .docx file."""
-    doc = Document(io.BytesIO(content))
-    text = ""
+    """Extract text from a .docx file.
+    
+    Args:
+        content: The file content as bytes.
+        
+    Returns:
+        The extracted text content.
+    """
+    doc: Document = Document(io.BytesIO(content))
+    text: str = ""
     for para in doc.paragraphs:
         text += para.text + "\n"
     return text

@@ -1,18 +1,20 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from typing import Type
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./metadata.db"
+from sqlalchemy import create_engine, Engine
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 
-engine = create_engine(
+SQLALCHEMY_DATABASE_URL: str = "sqlite:///./metadata.db"
+
+engine: Engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False}
 )
 
-SessionLocal = sessionmaker(
+SessionLocal: Type[Session] = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine
 )
 
-Base = declarative_base()
+Base: DeclarativeMeta = declarative_base()
