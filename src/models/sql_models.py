@@ -10,4 +10,16 @@ class DataChunks(Base):
     textChunk = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"<DataChunks(id={self.id}, source_id='{self.source_id}', chunk_id={self.chunk_id})>"
+        return f"textChunk={self.textChunk}, source_id='{self.sourceId}', chunk_id={self.chunkID}"
+    
+class DataInterview(Base):
+    __tablename__="Meetings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    candidate_name = Column(String(100), nullable=False)
+    candidate_email = Column(String, nullable=False)
+    interview_date = Column(String, nullable=False)
+    interview_time = Column(String, nullable=False)
+
+    def __repr__(self):
+        return f"candidate_name='{self.candidate_name}', date={self.interview_date}, interview_time={self.interview_time}, candidate_email={self.candidate_email}"

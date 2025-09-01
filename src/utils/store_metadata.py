@@ -64,3 +64,21 @@ class MetaData:
         except exc.SQLAlchemyError as e:
             self.db.rollback()
             return f"Error adding data: {e}"
+    
+    def add_interview(self, name: str, email: str, date: str, time: str):
+        try:
+  
+            db_chunk = sql_models.DataInterview(
+                candidate_name=name,
+                candidate_email=email,
+                interview_date=date,
+                interview_time=time
+            )
+            self.db.add(db_chunk)
+
+            self.db.commit()
+            return f"Successfully added Interview for {name} has been booked for {date} at {time}."
+
+        except exc.SQLAlchemyError as e:
+            self.db.rollback()
+            return f"Error adding data: {e}"

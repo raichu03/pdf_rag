@@ -13,7 +13,7 @@ router = APIRouter()
 data_ingestor = AddRecords()
 text_processor = TextProcessor()
 
-ChunkingStrategy = Literal["char", "recursive"]
+ChunkingStrategy = Literal["char", "sentence"]
 
 @router.post(
     "/upload-docs/",

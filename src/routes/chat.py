@@ -5,8 +5,10 @@ from redis import Redis
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, Query, Depends
 
 from models import ChatModel
+from services import ChatRag
 
 router = APIRouter()
+gemini_client = ChatRag()
 
 def get_redis_client():
     """
@@ -48,17 +50,14 @@ async def chat_rag(
             history = []
     else:
         history = []
+    
+    print(history)
+    print(type(history))
+    machine_response = gemini_client.conversation(user_input=user_message, chat_history=history)
 
-    history.append({"sender": "user", "message": user_message})
+    history.append({"role": "user", "parts": user_message})
 
-    if "hello" in user_message.lower():
-        machine_response = "Hi there! How can I help you today?"
-    elif "joke" in user_message.lower():
-        machine_response = "Why don't scientists trust atoms? Because they make up everything!"
-    else:
-        machine_response = f"I've received your message: '{user_message}'."
-
-    history.append({"sender": "machine", "message": machine_response})
+    history.append({"role": "model", "parts": machine_response})
 
     redis_client.set(conversation_key, json.dumps(history))
 

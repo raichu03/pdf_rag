@@ -34,9 +34,9 @@ class AddRecords:
             The response from the Weaviate import operation, typically including
             the status and UUIDs of the imported objects.
         """
-        response = self.add_weaviate.import_data(data_rows=text_data)
+        weaviate_data = self.add_weaviate.import_data(data_rows=text_data)
 
-        return response
+        return weaviate_data
 
     def _add_in_sql(self, document_name: str, text_chunks: List[Dict[str, Any]]) -> None:
         """
@@ -51,9 +51,9 @@ class AddRecords:
             text_chunks (List[str]): A list of text chunks to be added.
         """
 
-        weaviate_data = new_data.add_data(document_name=document_name,text_chunks=text_chunks)
+        sql_data = new_data.add_data(document_name=document_name,text_chunks=text_chunks)
 
-        return weaviate_data
+        return sql_data
     
     def ingest_data(self, document_name: str, text_chunks: List[str]):
         """
