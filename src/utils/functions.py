@@ -13,7 +13,6 @@ from type_definitions import (
     FunctionResponse, 
     SchedulesResponse, 
     TimeResponse, 
-    DatabaseInfoResponse,
     InterviewScheduleEntry
 )
 
@@ -24,6 +23,15 @@ class GetFunctions:
         """Initialize the function tools with database connections."""
         self._new_interview: MetaData = MetaData()
         self._get_data: SqlData = SqlData()
+
+        load_dotenv()
+
+        self._gemini_key = os.getenv('GEMINI_API_KEY')
+        genai.configure(api_key=self._gemini_key)
+
+        self._model: genai.GenerativeModel = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+        )
 
     def book_interview(self, name: str, email: str, date: str, time: str) -> FunctionResponse:
         """Book an interview with the provided details.
@@ -87,7 +95,7 @@ class GetFunctions:
         current_time: str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return TimeResponse(current_time=current_time)
     
-    def retrieve_database_info(self, user_query: str) -> DatabaseInfoResponse:
+    def retrieve_database_info(self, user_query: str) -> Dict:
         """Retrieve relevant information from the database to answer user questions.
 
         Args:
@@ -97,8 +105,12 @@ class GetFunctions:
         Returns:
             A dictionary with status and retrieved data.
         """
-        response: str = self._get_data.all_context(query=user_query)
-        return DatabaseInfoResponse(status="success", data=response)
+        chat = self._model.start_chat()
+        
+        context: str = self._get_data.all_context(query=user_query)
+        prompt = f'based on the user query {user_query} and the context {context} give the answer.'
+        response = chat.send_message(prompt)
+        return {'status':"success", 'data':response.text}
 
     def get_function_declaration(self, func: Callable[..., Any]) -> Dict[str, Any]:
         """Create a function declaration for the Gemini API from a Python function.

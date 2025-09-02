@@ -47,11 +47,6 @@ class TimeResponse(TypedDict):
     current_time: str
 
 
-class DatabaseInfoResponse(TypedDict):
-    """Type definition for database information response."""
-    status: str
-    data: str
-
 
 class ContentUUID(TypedDict):
     """Type definition for content with UUID."""
